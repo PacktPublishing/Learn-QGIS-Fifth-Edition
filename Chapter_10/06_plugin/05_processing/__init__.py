@@ -1,22 +1,21 @@
-# Import the required libraries.
-# Unlike the QGIS Python console, in Python plugins we must explicitly import all dependencies.
-import json
-import urllib.parse
+# Import the required libraries. Unlike the QGIS Python console, in Python plugins we must explicitly import all dependencies.
 from pathlib import Path
-
-from qgis.PyQt.QtWidgets import QAction, QMessageBox, QDialog
+import urllib.parse
+import json
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction, QMessageBox
 from qgis.PyQt.uic import loadUiType
-from qgis.core import QgsApplication
+from qgis.PyQt.QtWidgets import QDialog
+
 from qgis.core import QgsNetworkAccessManager
+from qgis.core import QgsApplication
 from qgis.core import QgsProcessingProvider
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
-from qgis.PyQt.QtGui import QIcon
 
-# This is an import from the file `exchange_rate_algorithm.py` in the same directory as this file.
 from .exchange_rate_algorithm import ExchangeRateAlgorithm
 
-
+# Load the UI definition from the .ui file. This generates a class we can use to create and manipulate the dialog widgets, such as input fields.
 ExchangeRateDialogUi, _ = loadUiType(
     str(Path(__file__).with_name("exchange_rate_dialog.ui"))
 )
@@ -37,7 +36,6 @@ def get_exchange_rates(input_currency: str) -> dict[str, dict[str, float]]:
     # The API URL is constructed by appending the URL-encoded currency code to the base URL.
     # There are multiple exchange rate providers, this is by far one of the easiest to use.
     url = f"https://latest.currency-api.pages.dev/v1/currencies/{currency_code_quoted}.json"
-
     # The `QgsNetworkAccessManager.blockingGet` function is a convenience function that performs a blocking HTTP GET request.
     # While it is not recommended to use blocking functions in the main thread, it is acceptable for simple plugins.
     # It greatly simplifies the code and makes it easier to understand.
@@ -61,6 +59,7 @@ class QgisBookMinimalPlugin:
     # The constructor of the plugin stores a reference to the `QgisInterface` instance.
     def __init__(self, iface):
         self.iface = iface
+        # Create an instance of our algorithm provider, that will later be registered in the processing registry.
         self.provider = QgisBookMinimalPluginAlgorithmProvider()
 
     # Mandatory method to initialize the Graphical User Interface (GUI) of the plugin.
@@ -90,16 +89,18 @@ class QgisBookMinimalPlugin:
     # Custom method with name decided by us.
     # The name suggests it will only execute when the action we defined in `initGui` is triggered.
     def _on_action_triggered(self):
-        # Create a new instance of the `ExchangeRateDialog` class.
+        # Create an instance of our dialog and show it.
         self.exchange_rate_dialog = ExchangeRateDialog()
-        # Show the dialog window.
         self.exchange_rate_dialog.show()
 
 
-class ExchangeRateDialog(QDialog, ExchangeRateDialogUi):  #  type: ignore
+# Create a dedicated class for our dialog, inheriting from both QDialog and the generated UI class. This allows us to manipulate the dialog widgets.
+class ExchangeRateDialog(QDialog, ExchangeRateDialogUi):
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        # Set up the user interface and initialize all the widgets defined in the UI. The `setupUi` method is provided by the generated UI class `ExchangeRateDialogUi`.
         self.setupUi(self)
         # Set the title of the dialog window in the GUI, so we make the user aware what they are being shown.
         self.setWindowTitle("Currency Converter")
@@ -156,7 +157,7 @@ class ExchangeRateDialog(QDialog, ExchangeRateDialogUi):  #  type: ignore
 
 
 class QgisBookMinimalPluginAlgorithmProvider(QgsProcessingProvider):
-    def id(self, *args, **kwargs):
+    def id(self):
         # This ID is used to uniquely identify the provider.
         # The ID should be lowercase and not contain spaces.
         return "qgisbookminimalplugin"

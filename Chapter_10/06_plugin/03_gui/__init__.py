@@ -4,6 +4,8 @@ from qgis.PyQt.QtWidgets import QAction, QMessageBox, QDialog
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.uic import loadUiType
 
+
+# Load the UI definition from the .ui file. This generates a class we can use to create and manipulate the dialog widgets, such as input fields.
 ExchangeRateDialogUi, _ = loadUiType(
     str(Path(__file__).with_name("exchange_rate_dialog.ui"))
 )
@@ -42,19 +44,25 @@ class QgisBookMinimalPlugin:
     # Custom method with name decided by us.
     # The name suggests it will only execute when the action we defined in `initGui` is triggered.
     def _on_action_triggered(self):
-        # Simply show a dialog window with a "QGIS book minimal plugin" title and "The plugin has been started!" contents.
-        QMessageBox.information(
-            None, "QGIS book minimal plugin", "The plugin has been started!"
-        )
+        # Create an instance of our dialog and show it.
+        self.exchange_rate_dialog = ExchangeRateDialog()
+        self.exchange_rate_dialog.show()
 
 
+# Create a dedicated class for our dialog, inheriting from both QDialog and the generated UI class. This allows us to manipulate the dialog widgets.
 class ExchangeRateDialog(QDialog, ExchangeRateDialogUi):
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        # Set up the user interface and initialize all the widgets defined in the UI. The `setupUi` method is provided by the generated UI class `ExchangeRateDialogUi`.
         self.setupUi(self)
+        # Set the title of the dialog window in the GUI, so we make the user aware what they are being shown.
         self.setWindowTitle("Currency Converter")
+        # When the "Calculate" button is clicked, call the `_convert_currency` method.
         self.calculateButton.clicked.connect(self._convert_currency)
 
+    # Method to perform the currency conversion when the button is clicked. For now we just create an empty method.
     def _convert_currency(self):
+        # pass indicates an empty block of code. We will implement the conversion logic later.
         pass

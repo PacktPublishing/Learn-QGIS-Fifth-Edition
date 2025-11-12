@@ -1,6 +1,15 @@
-# Import the required libraries.
-# Unlike the QGIS Python console, in Python plugins we must explicitly import all dependencies.
-from typing import Any
+"""
+***************************************************************************
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+***************************************************************************
+"""
+
+from typing import Any, Optional
 
 import urllib.parse
 import json
@@ -24,10 +33,18 @@ from qgis.PyQt.QtCore import QVariant, QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 
 
-# All Processing algorithms should extend the `QgsProcessingAlgorithm` class.
 class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
     """
-    This algorithm adds a new attribute to a vector layer with the amount from another attribute converted to a different currency.
+    This is an example algorithm that takes a vector layer and
+    creates a new identical one.
+
+    It is meant to be used as an example of how to create your own
+    algorithms and explain methods and variables used to do it. An
+    algorithm like this will be available in all elements, and there
+    is not need for additional work.
+
+    All Processing algorithms should extend the QgsProcessingAlgorithm
+    class.
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -43,20 +60,37 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
     # The list of currencies can be extended by adding more currency codes.
     SUPPORTED_CURRENCIES = ["eur", "usd", "gbp"]
 
+
     # Returns the algorithm name, used for identifying the algorithm.
     # This string should be fixed for the algorithm, and must not be localised.
+    # Localised means it can be translated from English to other languages.
     # The name should be unique.
     # Names should contain lowercase alphanumeric characters only and no spaces or other formatting characters.
     def name(self) -> str:
+        """
+        Returns the algorithm name, used for identifying the algorithm. This
+        string should be fixed for the algorithm, and must not be localised.
+        The name should be unique within each provider. Names should contain
+        lowercase alphanumeric characters only and no spaces or other
+        formatting characters.
+        """
         return "currencyexchange"
 
     # Returns the translated algorithm name, which should be used for any user-visible display of the algorithm name.
     def displayName(self) -> str:
+        """
+        Returns the translated algorithm name, which should be used for any
+        user-visible display of the algorithm name.
+        """
         return "Currency Exchange Attribute"
 
     # Returns the name of the group this algorithm belongs to.
     # This string should be localised.
     def group(self) -> str:
+        """
+        Returns the name of the group this algorithm belongs to. This string
+        should be localised.
+        """
         return "My First Algorithms"
 
     # Returns the unique ID of the group this algorithm belongs to.
@@ -64,11 +98,23 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
     # The group id should be unique.
     # Group id should contain lowercase alphanumeric characters only and no spaces or other formatting characters.
     def groupId(self) -> str:
+        """
+        Returns the unique ID of the group this algorithm belongs to. This
+        string should be fixed for the algorithm, and must not be localised.
+        The group id should be unique within each provider. Group id should
+        contain lowercase alphanumeric characters only and no spaces or other
+        formatting characters.
+        """
         return "myfirstalgorithms"
 
     # Returns a localised short helper string for the algorithm.
     # This string should provide a basic description about what the algorithm does and the parameters and outputs associated with it.
     def shortHelpString(self) -> str:
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and the
+        parameters and outputs associated with it.
+        """
         return "This algorithm adds a new attribute to a vector layer with the amount from another attribute converted to a different currency."
 
     # This method is called by QGIS to create a new instance of the algorithm class.
@@ -76,7 +122,11 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
         return self.__class__()
 
     # Here we define the inputs and output of the algorithm, along with some other properties.
-    def initAlgorithm(self, _config: dict[str, Any] | None = None) -> None:
+    def initAlgorithm(self, _config: Optional[dict[str, Any]] = None) -> None:
+        """
+        Here we define the inputs and output of the algorithm, along
+        with some other properties.
+        """
         # We add the input vector features source. It can have any kind of vector layer, even geometry-less.
         self.addParameter(
             QgsProcessingParameterFeatureSource(
@@ -104,7 +154,7 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
                 options=self.SUPPORTED_CURRENCIES,
                 allowMultiple=False,
                 usesStaticStrings=False,
-                defaultValue=[],
+                defaultValue=self.SUPPORTED_CURRENCIES[0],
             )
         )
         # Add the output currency parameter with a list of supported currencies.
@@ -115,7 +165,7 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
                 options=self.SUPPORTED_CURRENCIES,
                 allowMultiple=False,
                 usesStaticStrings=False,
-                defaultValue=[],
+                defaultValue=self.SUPPORTED_CURRENCIES[1],
             )
         )
         # We add a feature sink in which to store our processed features (this usually takes the form of a newly created vector layer when the algorithm is run in QGIS).
@@ -148,12 +198,12 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
 
         # Retrieve the input amount field.
         # This is the field that will be converted to a different currency.
-        input_field_names = self.parameterAsFields(
+        input_field_names = self.parameterAsStrings(
             parameters, self.INPUT_FIELD, context
         )
 
-        # The value is an array of field names, so we need to check if it is empty.
-        if not input_field_names:
+        # The value is an array of field names, so we need to check if it is empty. Since we expect exactly one field, we also check if the length is 1.
+        if not input_field_names or len(input_field_names) != 1:
             raise QgsProcessingException("Invalid input amount field!")
 
         # Retrieve the input and output currency.
@@ -211,7 +261,7 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
             )
 
         # Get the exchange rate from the input currency to the output currency.
-        exchange_rate = self._getCurrencyExchangeRate(input_currency, output_currency)
+        exchange_rate = self._getCurrencyExchangeRate(input_currency, output_currency, feedback)
 
         if exchange_rate is None:
             raise QgsProcessingException(
@@ -235,8 +285,14 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
             if feedback.isCanceled():
                 break
 
-            # Get the value from the input field and convert it to the output currency amount.
-            value = feature[input_field_names[0]] * exchange_rate
+            # Get the input value from the feature.
+            input_value = feature[input_field_names[0]]
+
+            # If the input value is None, set the output value to None, otherwise convert it.
+            if input_value is None:
+                value = None
+            else:
+                value = input_value * exchange_rate
 
             # Copy the feature attributes and add the new value to the end.
             new_feature = QgsFeature(fields)
@@ -255,24 +311,28 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
         return {self.OUTPUT_LAYER: dest_id}
 
     def _getCurrencyExchangeRate(
-        self, input_currency: str, output_currency: str
+        self,
+        input_currency: str,
+        output_currency: str,
+        feedback: QgsProcessingFeedback,
     ) -> float | None:
         # Try if we can get the exchange rate from the internet API.
         try:
             exchange_rates = get_exchange_rates(input_currency)
-
-            # Check if the output currency is in the returned exchange rates.
-            if (
-                input_currency in exchange_rates
-                and output_currency in exchange_rates[input_currency]
-            ):
-                return exchange_rates[input_currency][output_currency]
-            else:
-                self.pushInfo("Cannot find exchange rate for the given currencies!")
-
-                return None
         except Exception as err:
-            self.pushInfo(f"Failed to download exchange rates: {err}")
+            feedback.pushInfo(f"Failed to download exchange rates: {err}")
+
+            return None
+
+        # Check if the output currency is in the returned exchange rates.
+        if (
+            isinstance(exchange_rates, dict)
+            and input_currency in exchange_rates
+            and output_currency in exchange_rates[input_currency]
+        ):
+            return exchange_rates[input_currency][output_currency]
+        else:
+            feedback.pushInfo("Cannot find exchange rate for the given currencies!")
 
             return None
 
@@ -292,7 +352,6 @@ def get_exchange_rates(input_currency: str) -> dict[str, dict[str, float]]:
     # The API URL is constructed by appending the URL-encoded currency code to the base URL.
     # There are multiple exchange rate providers, this is by far one of the easiest to use.
     url = f"https://latest.currency-api.pages.dev/v1/currencies/{currency_code_quoted}.json"
-
     # The `QgsNetworkAccessManager.blockingGet` function is a convenience function that performs a blocking HTTP GET request.
     # While it is not recommended to use blocking functions in the main thread, it is acceptable for simple plugins.
     # It greatly simplifies the code and makes it easier to understand.

@@ -23,10 +23,24 @@ from qgis.core import (
     QgsProcessingParameterField,
     QgsProcessingParameterEnum,
 )
+
 from qgis import processing
 
 
 class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
+    """
+    This is an example algorithm that takes a vector layer and
+    creates a new identical one.
+
+    It is meant to be used as an example of how to create your own
+    algorithms and explain methods and variables used to do it. An
+    algorithm like this will be available in all elements, and there
+    is not need for additional work.
+
+    All Processing algorithms should extend the QgsProcessingAlgorithm
+    class.
+    """
+
     # Constants used to refer to parameters and outputs. They will be
     # used when calling the algorithm from another algorithm, or when
     # calling from the QGIS console.
@@ -36,21 +50,41 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
     OUTPUT_CURRENCY = "OUTPUT_CURRENCY"
     OUTPUT_LAYER = "OUTPUT_LAYER"
 
+    # The supported currencies for the conversion.
+    # The list of currencies can be extended by adding more currency codes.
+    SUPPORTED_CURRENCIES = ["eur", "usd", "gbp"]
+
+
     # Returns the algorithm name, used for identifying the algorithm.
     # This string should be fixed for the algorithm, and must not be localised.
     # Localised means it can be translated from English to other languages.
     # The name should be unique.
     # Names should contain lowercase alphanumeric characters only and no spaces or other formatting characters.
     def name(self) -> str:
+        """
+        Returns the algorithm name, used for identifying the algorithm. This
+        string should be fixed for the algorithm, and must not be localised.
+        The name should be unique within each provider. Names should contain
+        lowercase alphanumeric characters only and no spaces or other
+        formatting characters.
+        """
         return "currencyexchange"
 
     # Returns the translated algorithm name, which should be used for any user-visible display of the algorithm name.
     def displayName(self) -> str:
+        """
+        Returns the translated algorithm name, which should be used for any
+        user-visible display of the algorithm name.
+        """
         return "Currency Exchange Attribute"
 
     # Returns the name of the group this algorithm belongs to.
     # This string should be localised.
     def group(self) -> str:
+        """
+        Returns the name of the group this algorithm belongs to. This string
+        should be localised.
+        """
         return "My First Algorithms"
 
     # Returns the unique ID of the group this algorithm belongs to.
@@ -58,11 +92,23 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
     # The group id should be unique.
     # Group id should contain lowercase alphanumeric characters only and no spaces or other formatting characters.
     def groupId(self) -> str:
+        """
+        Returns the unique ID of the group this algorithm belongs to. This
+        string should be fixed for the algorithm, and must not be localised.
+        The group id should be unique within each provider. Group id should
+        contain lowercase alphanumeric characters only and no spaces or other
+        formatting characters.
+        """
         return "myfirstalgorithms"
 
     # Returns a localised short helper string for the algorithm.
     # This string should provide a basic description about what the algorithm does and the parameters and outputs associated with it.
     def shortHelpString(self) -> str:
+        """
+        Returns a localised short helper string for the algorithm. This string
+        should provide a basic description about what the algorithm does and the
+        parameters and outputs associated with it.
+        """
         return "This algorithm adds a new attribute to a vector layer with the amount from another attribute converted to a different currency."
 
     # This method is called by QGIS to create a new instance of the algorithm class.
@@ -70,7 +116,11 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
         return self.__class__()
 
     # Here we define the inputs and output of the algorithm, along with some other properties.
-    def initAlgorithm(self, config: Optional[dict[str, Any]] = None):
+    def initAlgorithm(self, _config: Optional[dict[str, Any]] = None) -> None:
+        """
+        Here we define the inputs and output of the algorithm, along
+        with some other properties.
+        """
         # We add the input vector features source. It can have any kind of vector layer, even geometry-less.
         self.addParameter(
             QgsProcessingParameterFeatureSource(
@@ -98,7 +148,7 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
                 options=self.SUPPORTED_CURRENCIES,
                 allowMultiple=False,
                 usesStaticStrings=False,
-                defaultValue=[],
+                defaultValue=self.SUPPORTED_CURRENCIES[0],
             )
         )
         # Add the output currency parameter with a list of supported currencies.
@@ -109,7 +159,7 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
                 options=self.SUPPORTED_CURRENCIES,
                 allowMultiple=False,
                 usesStaticStrings=False,
-                defaultValue=[],
+                defaultValue=self.SUPPORTED_CURRENCIES[1],
             )
         )
         # We add a feature sink in which to store our processed features (this usually takes the form of a newly created vector layer when the algorithm is run in QGIS).
@@ -126,6 +176,10 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback,
     ) -> dict[str, Any]:
+        """
+        Here is where the processing itself takes place.
+        """
+
         # Retrieve the feature source and sink. The 'dest_id' variable is used
         # to uniquely identify the feature sink, and must be included in the
         # dictionary returned by the processAlgorithm function.
@@ -155,24 +209,24 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
         # If sink was not created, throw an exception to indicate that the algorithm
         # encountered a fatal error. The exception text can be any string, but in this
         # case we use the pre-built invalidSinkError method to return a standard
-        # helper text for when a sink cannot be evaluated.
+        # helper text for when a sink cannot be evaluated
         if sink is None:
             raise QgsProcessingException(self.invalidSinkError(parameters, self.OUTPUT))
 
         # Compute the number of steps to display within the progress bar and
-        # get features from source.
+        # get features from source
         total = 100.0 / source.featureCount() if source.featureCount() else 0
         features = source.getFeatures()
 
         for current, feature in enumerate(features):
-            # Stop the algorithm if cancel button has been clicked.
+            # Stop the algorithm if cancel button has been clicked
             if feedback.isCanceled():
                 break
 
-            # Add a feature in the sink.
+            # Add a feature in the sink
             sink.addFeature(feature, QgsFeatureSink.Flag.FastInsert)
 
-            # Update the progress bar.
+            # Update the progress bar
             feedback.setProgress(int(current * total))
 
         # To run another Processing algorithm as part of this algorithm, you can use
@@ -181,7 +235,7 @@ class ExchangeRateAlgorithm(QgsProcessingAlgorithm):
         # to the executed algorithm, and that the executed algorithm can send feedback
         # reports to the user (and correctly handle cancellation and progress reports!)
         if False:
-            _buffered_layer = processing.run(
+            buffered_layer = processing.run(
                 "native:buffer",
                 {
                     "INPUT": dest_id,

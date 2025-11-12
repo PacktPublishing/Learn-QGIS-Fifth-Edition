@@ -1,4 +1,4 @@
-# Import the required libraries. Unlike the QGIS Python console, in Python plugins we must explicitly import all dependencies.
+# Import the required libraries. Unlike the QGIS Python Console, in Python plugins we must explicitly import all dependencies.
 from qgis.PyQt.QtWidgets import QAction, QMessageBox
 
 
@@ -19,9 +19,9 @@ class QgisBookMinimalPlugin:
     def initGui(self):
         # Create a new action.
         self.action = QAction("QGIS book minimal plugin", self.iface.mainWindow())
-
         # Define what happens when it is triggered. In this case we will call the `on_triggered` function.
         self.action.triggered.connect(self._on_action_triggered)
+
         # Add the action to the QGIS interface toolbar.
         self.iface.addToolBarIcon(self.action)
 

@@ -19,3 +19,6 @@ author=Qgis Qgisson
 
 # The email of the author in case someone wants to chat about the plugin.
 email=your@email.com
+
+# Repository where the code of this plugin resides.
+repository=https://github.com/PacktPublishing/Learn-QGIS-Fifth-Edition

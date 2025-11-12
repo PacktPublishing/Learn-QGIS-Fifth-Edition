@@ -1,7 +1,7 @@
 # Import the required libraries. Unlike the QGIS Python console, in Python plugins we must explicitly import all dependencies.
 from pathlib import Path
-from qgis.PyQt.QtWidgets import QAction, QMessageBox
 from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction, QMessageBox
 
 
 # This function is required by the QGIS plugin framework to actually instantiate a QGIS plugin.
@@ -25,6 +25,7 @@ class QgisBookMinimalPlugin:
         self.action.setIcon(QIcon(str(Path(__file__).with_name("icon.svg"))))
         # Define what happens when it is triggered. In this case we will call the `on_triggered` function.
         self.action.triggered.connect(self._on_action_triggered)
+
         # Add the action to the QGIS interface toolbar.
         self.iface.addToolBarIcon(self.action)
 

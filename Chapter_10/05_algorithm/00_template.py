@@ -149,24 +149,24 @@ class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
         # If sink was not created, throw an exception to indicate that the algorithm
         # encountered a fatal error. The exception text can be any string, but in this
         # case we use the pre-built invalidSinkError method to return a standard
-        # helper text for when a sink cannot be evaluated.
+        # helper text for when a sink cannot be evaluated
         if sink is None:
             raise QgsProcessingException(self.invalidSinkError(parameters, self.OUTPUT))
 
         # Compute the number of steps to display within the progress bar and
-        # get features from source.
+        # get features from source
         total = 100.0 / source.featureCount() if source.featureCount() else 0
         features = source.getFeatures()
 
         for current, feature in enumerate(features):
-            # Stop the algorithm if cancel button has been clicked.
+            # Stop the algorithm if cancel button has been clicked
             if feedback.isCanceled():
                 break
 
-            # Add a feature in the sink.
+            # Add a feature in the sink
             sink.addFeature(feature, QgsFeatureSink.Flag.FastInsert)
 
-            # Update the progress bar.
+            # Update the progress bar
             feedback.setProgress(int(current * total))
 
         # To run another Processing algorithm as part of this algorithm, you can use
@@ -175,7 +175,7 @@ class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
         # to the executed algorithm, and that the executed algorithm can send feedback
         # reports to the user (and correctly handle cancellation and progress reports!)
         if False:
-            _buffered_layer = processing.run(
+            buffered_layer = processing.run(
                 "native:buffer",
                 {
                     "INPUT": dest_id,
