@@ -1,0 +1,21 @@
+[general]
+# Plugin name.
+name=QGIS Book Plugin
+
+# Plugin short description.
+description=QGIS Book Plugin is a minimal sample plugin for people who get started with QGIS plugin writing.
+
+# Plugin long description.
+about=Here usually goes much longer description of the plugin, how it works and so on.
+
+# Plugin version.
+version=0.0
+
+# The minimum QGIS version where this plugin can run on.
+qgisMinimumVersion=3.34
+
+# The name of the plugin's author.
+author=Qgis Qgisson
+
+# The email of the author in case someone wants to chat about the plugin.
+email=your@email.com

@@ -1,0 +1,2 @@
+https://www.osm.org/#map=14/[% y( transform( centroid( @geometry ),  @layer_crs , 'EPSG:4326' ) ) || '/' || x( transform( centroid( @geometry ),  @layer_crs , 'EPSG:4326' ) ) %]
+
