@@ -6,7 +6,7 @@ def saveProject():
     # to the QIGS message bar, add a new message
     iface.messageBar().pushMessage(
             "Warning",
-            "This project contains top secret ice-cream locations! Keep the project and it's data secret!",
+            "This project contains top secret ice-cream locations! Keep the project and its data secret!",
             Qgis.Warning,
             10
     )
